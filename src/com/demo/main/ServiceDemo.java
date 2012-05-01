@@ -27,11 +27,27 @@ public class ServiceDemo extends Service {
 	Timer timer = new Timer();
 	
 	private LocationManager mgr;
+	private Intent onStartIntent;
+	private int notificationCounter;
+	private ServiceDataSource data;
 	
 	@Override
 	public void onCreate(){
 		super.onCreate();
+		data = new ServiceDataSource( this );
+		
+		notificationCounter = 0;
+		
+		if( mgr != null ){
+			mgr.removeUpdates( locationListener );
+			mgr = null;
+		}
+		
+		mgr = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		
 		Log.d("onCreate()", "Service Created");
+		
+		data.saveAppsList();
 	}
 	
 	// This is the old onStart method that will be called on the pre-2.0
@@ -53,6 +69,7 @@ public class ServiceDemo extends Service {
 			// TODO Auto-generated method stub
 			Log.d("onLocationChanged()", "Location Update");
 			dumpLocation( location );
+			sendNotification( onStartIntent, System.currentTimeMillis(), location.toString(), ++notificationCounter );
 		}
 
 		@Override
@@ -79,16 +96,7 @@ public class ServiceDemo extends Service {
 	public int onStartCommand( Intent intent, int flags, int startId ){
 		//super.onStartCommand(intent, flags, startId);
 		
-		final NotificationManager notificationManager = (NotificationManager) getSystemService( Context.NOTIFICATION_SERVICE );
-		final PendingIntent contentIntent = PendingIntent.getService(this, 0, intent, 0);
-		
-		
-		if( mgr != null ){
-			mgr.removeUpdates( locationListener );
-			mgr = null;
-		}
-		
-		mgr = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		onStartIntent = intent;
 		
 		Criteria criteria = new Criteria();
 		criteria.setAccuracy( Criteria.ACCURACY_FINE );
@@ -112,10 +120,7 @@ public class ServiceDemo extends Service {
 				
 				long when = System.currentTimeMillis();
 				
-				Notification notify = new Notification( R.drawable.ic_launcher, "ServiceDemo", when );
-				notify.setLatestEventInfo(ServiceDemo.this, "ServiceDemo", "Testing Service", contentIntent);
 				
-				notificationManager.notify( i++, notify );
 			}
 			
 		};
@@ -154,6 +159,17 @@ public class ServiceDemo extends Service {
 			Log.d("dumpLocation()", "Location [unknown]");
 		}else{
 			Log.d("dumpLocation()", location.toString());
+			
 		}
+	}
+	
+	private void sendNotification( Intent intent, long when, String message, int i ){
+		final NotificationManager notificationManager = (NotificationManager) getSystemService( Context.NOTIFICATION_SERVICE );
+		final PendingIntent contentIntent = PendingIntent.getService(this, 0, intent, 0);
+		
+		Notification notify = new Notification( R.drawable.ic_launcher, "ServiceDemo", when );
+		notify.setLatestEventInfo(ServiceDemo.this, "ServiceDemo", message, contentIntent);
+		
+		notificationManager.notify( i, notify );
 	}
 }
