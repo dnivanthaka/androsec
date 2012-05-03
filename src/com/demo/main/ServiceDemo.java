@@ -47,6 +47,7 @@ public class ServiceDemo extends Service {
 		
 		Log.d("onCreate()", "Service Created");
 		
+		data.open();
 		data.saveAppsList();
 	}
 	
