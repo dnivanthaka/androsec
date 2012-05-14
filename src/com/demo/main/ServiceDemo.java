@@ -49,6 +49,8 @@ public class ServiceDemo extends Service {
 		
 		data.open();
 		data.saveAppsList();
+		
+		
 	}
 	
 	// This is the old onStart method that will be called on the pre-2.0
