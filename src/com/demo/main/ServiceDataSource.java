@@ -50,7 +50,7 @@ public class ServiceDataSource {
 			//packageInfo.
 			Log.d("Service **", "Installed package :" + packageInfo.packageName + packageInfo.processName);
 			cv.put(ServiceData.TABLE_APPSLIST_APPNAME, packageInfo.packageName);
-			database.insert(ServiceData.TABLE_APPSLIST, null, cv);
+			//database.insert(ServiceData.TABLE_APPSLIST, null, cv);
         }
 	}
 }

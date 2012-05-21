@@ -149,6 +149,8 @@ public class ServiceDemo extends Service {
 			timer.cancel();
 		}
 		
+		this.deleteDatabase( "mobsec.db" );
+		
 		Log.d("onDestroy()", "Service Destroyed");
 	}
 	
