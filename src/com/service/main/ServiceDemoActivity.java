@@ -1,4 +1,6 @@
-package com.demo.main;
+package com.service.main;
+
+import com.demo.main.R;
 
 import android.app.Activity;
 import android.content.Intent;

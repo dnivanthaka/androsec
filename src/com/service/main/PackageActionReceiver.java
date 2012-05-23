@@ -1,4 +1,4 @@
-package com.demo.main;
+package com.service.main;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

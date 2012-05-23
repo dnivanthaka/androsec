@@ -1,4 +1,4 @@
-package com.demo.main;
+package com.service.main;
 
 import java.util.List;
 
@@ -51,6 +51,9 @@ public class ServiceDataSource {
 			Log.d("Service **", "Installed package :" + packageInfo.packageName + packageInfo.processName);
 			cv.put(ServiceData.TABLE_APPSLIST_APPNAME, packageInfo.packageName);
 			//database.insert(ServiceData.TABLE_APPSLIST, null, cv);
+			database.replace(ServiceData.TABLE_APPSLIST, null, cv);
         }
+		
+		//Log.d("***", database.);
 	}
 }

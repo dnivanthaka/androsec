@@ -1,7 +1,9 @@
-package com.demo.main;
+package com.service.main;
 
 import java.util.Timer;
 import java.util.TimerTask;
+
+import com.demo.main.R;
 
 import android.app.Notification;
 import android.app.NotificationManager;

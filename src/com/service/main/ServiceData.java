@@ -1,4 +1,4 @@
-package com.demo.main;
+package com.service.main;
 
 import static android.provider.BaseColumns._ID;
 
@@ -43,13 +43,18 @@ public class ServiceData extends SQLiteOpenHelper {
 	    		  	"lat varchar(15)  NOT NULL,"+
 	    		  	"lng varchar(15)  NOT NULL,"+
 	    		  	"PRIMARY KEY (locationID, lat, lng));");
-	      
+	      /*
 	      db.execSQL("CREATE TABLE installed_apps ( "+
 	    		    "_ID INTEGER PRIMARY KEY AUTOINCREMENT, "+
-	    		  	"package_name TEXT  NOT NULL,"+
+	    		  	"package_name TEXT  NULL,"+
 	    		  	"strace_output varchar(255)  NULL,"+
-	    		  	"verified int(1)  NOT NULL"+
+	    		  	"verified int(1)  NULL"+
 	    		  	");");
+	    	*/
+	      db.execSQL("CREATE TABLE installed_apps (" + _ID
+	              + " INTEGER PRIMARY KEY AUTOINCREMENT, time"
+	              + " INTEGER, package_name TEXT NOT NULL, " +
+	                " strace_output varchar(255)  NULL, UNIQUE(package_name));");
 	      
 	      db.execSQL("CREATE TABLE location_permissions ("+
 	    		  	"locationID varchar(15)  NOT NULL,"+

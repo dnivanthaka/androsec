@@ -11,17 +11,17 @@
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
-        <service android:name=".ServiceDemo" 
+        <service android:name="com.service.main.ServiceDemo" 
             android:exported="false" />
         <activity
-            android:name=".ServiceDemoActivity"
+            android:name="com.service.main.ServiceDemoActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
            </intent-filter>     
         </activity>
-        <receiver android:name=".PackageActionReceiver">
+        <receiver android:name="com.service.main.PackageActionReceiver">
   		<intent-filter>
     		<action android:name="android.intent.action.PACKAGE_ADDED" />
     		<action android:name="android.intent.action.PACKAGE_REMOVED" />
