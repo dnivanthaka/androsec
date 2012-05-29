@@ -10,7 +10,7 @@
 
     <application
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name" >
+        android:label="@string/app_name">
         <service android:name="com.service.main.ServiceDemo" 
             android:exported="false" />
         <activity
@@ -30,5 +30,4 @@
 		</receiver>
         
     </application>
-
 </manifest>

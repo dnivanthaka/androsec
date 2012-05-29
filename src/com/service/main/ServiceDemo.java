@@ -16,6 +16,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -33,6 +34,15 @@ public class ServiceDemo extends Service {
 	private Intent onStartIntent;
 	private int notificationCounter;
 	private ServiceDataSource data;
+	
+	public static boolean isRunning = false;
+	
+	public class LocalBinder extends Binder {
+		ServiceDemo getService() {
+            return ServiceDemo.this;
+        }
+    }
+
 	
 	@Override
 	public void onCreate(){
@@ -124,6 +134,8 @@ public class ServiceDemo extends Service {
 				i++;
 				Log.d("run()", "Service Running: value = "+i);
 				
+				AppGlobal.getinstance().setServiceStatus( true );
+				
 				long when = System.currentTimeMillis();
 				
 				
@@ -152,7 +164,9 @@ public class ServiceDemo extends Service {
 			timer.cancel();
 		}
 		
-		this.deleteDatabase( "mobsec.db" );
+		//this.deleteDatabase( "mobsec.db" );
+		isRunning = false;
+		AppGlobal.getinstance().setServiceStatus( false );
 		
 		Log.d("onDestroy()", "Service Destroyed");
 	}
