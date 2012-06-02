@@ -62,8 +62,6 @@ public class ServiceDemo extends Service {
 		
 		data.open();
 		data.saveAppsList();
-		
-		
 	}
 	
 	// This is the old onStart method that will be called on the pre-2.0
@@ -164,9 +162,12 @@ public class ServiceDemo extends Service {
 			timer.cancel();
 		}
 		
+		data.close();
+		
 		//this.deleteDatabase( "mobsec.db" );
 		isRunning = false;
 		AppGlobal.getinstance().setServiceStatus( false );
+		
 		
 		Log.d("onDestroy()", "Service Destroyed");
 	}

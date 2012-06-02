@@ -1,5 +1,8 @@
 package com.service.main;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 
 import com.demo.main.R;
@@ -19,11 +22,14 @@ import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 public class ServiceDemoActivity extends Activity {
     /** Called when the activity is first created. */
 	private Button btnStart;
 	private Button btnStop;
+	private Button runCommand;
 	private Intent serviceIntent;
 	private ServiceDemo mService;
 
@@ -43,21 +49,28 @@ public class ServiceDemoActivity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        setContentView(R.layout.main);
+        super.onCreate(savedInstanceState);    
         
         final Intent intent = this.getIntent();
         final String action = intent.getAction();
-        
-
-        
+         
         if( Intent.ACTION_PACKAGE_REMOVED.equals( action ) ){
         	Log.d("Service Activity", "Package Removed");
         }
         
-        btnStart = (Button) findViewById( R.id.btnStart );
-        btnStop  = (Button) findViewById( R.id.btnStop );
+        
+        
+        
+        //btnStart = (Button) findViewById( R.id.btnStart );
+        //btnStop  = (Button) findViewById( R.id.btnStop );
+        
+        /*
+        LinearLayout l1 = (LinearLayout)findViewById(R.id.linearLayout1);
+        
+        Button btnStart = new Button( this );
+        btnStart.setText("Start Service");
+        Button btnStop  = new Button( this );
+        btnStop.setText("Stop Service");
         
         btnStart.setOnClickListener( new View.OnClickListener() {
 			
@@ -80,6 +93,14 @@ public class ServiceDemoActivity extends Activity {
 				stopService( serviceIntent );
 			}
 		} );
+		*/
+        
+        //if( isServiceRunning( ServiceDemo.class.getCanonicalName() ) ){
+        	//l1.addView( btnStop );
+        //}else{
+        	//l1.addView( btnStart );
+        	
+        //}
         
         /*
         IntentFilter filter = new IntentFilter();
@@ -92,8 +113,136 @@ public class ServiceDemoActivity extends Activity {
         filter.addAction(Intent.ACTION_PACKAGE_RESTARTED);
         */
         
-        
+        	setServiceControls();
+        	
+        	
 
+    }
+    
+    private void runCommand(){
+    	try {
+    		TextView commandOut = (TextView)findViewById(R.id.commandOut);
+
+    	    // Executes the command.
+    	    Process process = Runtime.getRuntime().exec("/system/bin/ps");
+    	    
+    	    // Reads stdout.
+    	    // NOTE: You can write to stdin of the command using
+    	    //       process.getOutputStream().
+    	    BufferedReader reader = new BufferedReader(
+    	            new InputStreamReader(process.getInputStream()));
+    	    int read;
+    	    char[] buffer = new char[4096];
+    	    StringBuffer output = new StringBuffer();
+    	    while ((read = reader.read(buffer)) > 0) {
+    	        output.append(buffer, 0, read);
+    	    }
+    	    reader.close();
+    	    commandOut.append(output);
+
+    	    // Waits for the command to finish.
+    	    process.waitFor();
+    	    
+    	    //return output.toString();
+    	} catch (IOException e) {
+    	    //throw new RuntimeException(e);
+    	} catch (InterruptedException e) {
+    	    //throw new RuntimeException(e);
+    	}
+    }
+    
+    private void readLog(){
+    	try
+        {
+    		TextView commandOut = (TextView)findViewById(R.id.commandOut);
+    		
+            Process mLogcatProc = null;
+            BufferedReader reader = null;
+            mLogcatProc = Runtime.getRuntime().exec(new String[]{"logcat", "-d"});
+
+            reader = new BufferedReader(new InputStreamReader(mLogcatProc.getInputStream()));
+
+            String line;
+            final StringBuilder log = new StringBuilder();
+            String separator = System.getProperty("line.separator"); 
+
+            while ((line = reader.readLine()) != null)
+            {
+                log.append(line);
+                log.append(separator);
+            }
+            String w = log.toString();
+            //Toast.makeText(getApplicationContext(),w, Toast.LENGTH_LONG).show();
+            commandOut.append(w);
+        }
+        catch (Exception e) 
+        {
+            //Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
+    }
+    
+    private void setServiceControls(){
+    	
+    	setContentView(R.layout.main);
+    	
+    	LinearLayout l1 = (LinearLayout)findViewById(R.id.linearLayout1);
+    	
+    	if( btnStop != null )
+    		l1.removeView( btnStop );
+    	
+    	if( btnStart != null )
+    		l1.removeView( btnStart );
+    
+        
+        Button btnStart = new Button( this );
+        btnStart.setText("Start Service");
+        Button btnStop  = new Button( this );
+        btnStop.setText("Stop Service");
+        
+        btnStart.setOnClickListener( new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				serviceIntent = new Intent( ServiceDemoActivity.this, ServiceDemo.class );
+				
+				startService( serviceIntent );
+				bindService(serviceIntent,mConnection,0);
+				setServiceControls();
+
+			}
+		} );
+        
+        btnStop.setOnClickListener( new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				serviceIntent = new Intent( ServiceDemoActivity.this, ServiceDemo.class );
+				
+				stopService( serviceIntent );
+				while( isServiceRunning( ServiceDemo.class.getCanonicalName() ) );
+				setServiceControls();
+			}
+		} );
+        
+        if( isServiceRunning( ServiceDemo.class.getCanonicalName() ) ){
+        	l1.addView( btnStop );
+        }else{
+        	l1.addView( btnStart );
+        	
+        }
+        
+        runCommand = (Button) findViewById( R.id.btnRun );
+        
+        runCommand.setOnClickListener( new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				//runCommand();
+				readLog();
+			}
+		} );
+        
     }
     
     @Override
@@ -106,6 +255,8 @@ public class ServiceDemoActivity extends Activity {
         if( isServiceRunning( ServiceDemo.class.getCanonicalName() ) ){
         	Log.d("## Service Activity ##", "Service Running");
         }
+        
+        setServiceControls();
     }
     @Override
     protected void onPause() {

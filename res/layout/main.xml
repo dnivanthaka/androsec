@@ -3,8 +3,8 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:layout_gravity="center_vertical" >
-
+    android:layout_gravity="top" >
+<!--
 <Button android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:id="@+id/btnStart"
@@ -18,5 +18,34 @@
     android:text="Stop Service"
     android:layout_gravity="center_horizontal">
 </Button>
+-->
+
+<TextView
+    android:id="@+id/textView1"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Background Service" />
+<LinearLayout
+    android:layout_width="match_parent"
+    android:id="@+id/linearLayout1"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+</LinearLayout>
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+    <Button
+    android:id="@+id/btnRun"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Run Command" />
+</LinearLayout>
+
+<TextView
+    android:id="@+id/commandOut"
+    android:layout_width="match_parent"
+    android:layout_height="300dp"
+    android:text="" />
 
 </LinearLayout>

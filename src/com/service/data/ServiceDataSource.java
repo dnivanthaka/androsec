@@ -30,6 +30,7 @@ public class ServiceDataSource {
 	
 	public void close(){
 		dbHelper.close();
+		database.close();
 	}
 	
 	public void saveAppInfo(){
