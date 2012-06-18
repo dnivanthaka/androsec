@@ -2,6 +2,7 @@ package com.service.data;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -10,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
@@ -99,5 +101,22 @@ public class ServiceDataSource {
 			database.replace(ServiceData.TABLE_APPSLIST, null, cv);
 			//packageInfo.
         }
+	}
+	
+	public List<String> getSavedAppsList(){
+		List<String> lst = new ArrayList<String>();
+		//String select = "SELECT package_name FROM installed_apps";
+		Cursor cursor = database.query(ServiceData.TABLE_APPSLIST, new String[] {"package_name"}, 
+                null, null, null, null, null);
+		cursor.moveToFirst();
+		while( cursor.isAfterLast() == false ){
+			Log.d("XXXXXXXX", "Installed package :" + cursor.getString(0));
+			lst.add( cursor.getString(0) );
+			cursor.moveToNext();
+		}
+		
+		cursor.close();
+		
+		return lst;
 	}
 }

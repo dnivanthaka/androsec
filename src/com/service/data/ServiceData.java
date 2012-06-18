@@ -56,10 +56,21 @@ public class ServiceData extends SQLiteOpenHelper {
 	              + " INTEGER, package_name TEXT NOT NULL, " +
 	                " strace_output varchar(255)  NULL, UNIQUE(package_name));");
 	      
+	      /*
 	      db.execSQL("CREATE TABLE location_permissions ("+
 	    		  	"locationID varchar(15)  NOT NULL,"+
 	    		  	"permission_level varchar(15)  NOT NULL,"+
 	    		  	"PRIMARY KEY (locationID, permission_level));");
+	    */
+	      
+	      db.execSQL("CREATE TABLE location_permissions ("+ _ID
+	    		  + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+	    		  +	"lat varchar(15)  NOT NULL,"
+	    		  +	"lng varchar(15)  NOT NULL,"
+	    		  +	"wifi_s varchar(15)  NOT NULL,"
+	    		  +	"blu_s varchar(15)  NOT NULL,"
+	    		  +	"scr_s varchar(15)  NOT NULL,"
+	    		  +	");");
 		
 	}
 

@@ -1,25 +1,38 @@
 package com.service.main;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import com.demo.main.R;
 import com.service.data.ServiceDataSource;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.TextView;
 
 public class ServiceDemo extends Service {
 
@@ -34,6 +47,7 @@ public class ServiceDemo extends Service {
 	private Intent onStartIntent;
 	private int notificationCounter;
 	private ServiceDataSource data;
+	private HashMap<String, String> runningProcsList;
 	
 	public static boolean isRunning = false;
 	
@@ -42,12 +56,166 @@ public class ServiceDemo extends Service {
             return ServiceDemo.this;
         }
     }
+	
+	private class AppLaunchWatcher extends AsyncTask<Context, Void, Void>
+	{
+		
+		
+		@Override
+		protected Void doInBackground(Context ... params) {
+			
+			List<String> appList = data.getSavedAppsList();
+
+			while( isRunning ){
+				String processName = "";
+			    ActivityManager am = (ActivityManager)params[0].getSystemService(ACTIVITY_SERVICE);
+			    List l = am.getRunningAppProcesses();
+			    Iterator i = l.iterator();
+			    PackageManager pm = params[0].getPackageManager();
+			    runningProcsList.clear();
+			    
+			    while(i.hasNext()) 
+			    {
+			          ActivityManager.RunningAppProcessInfo info = (ActivityManager.RunningAppProcessInfo)(i.next());
+			          try 
+			          { 
+			              
+			                  CharSequence c = pm.getApplicationLabel(pm.getApplicationInfo(info.processName, PackageManager.GET_META_DATA));
+			                  Log.d("Process", "Id: "+ info.pid +" ProcessName: "+ info.processName +"  Label: "+c.toString());
+			                  if( appList.contains( info.processName ) ){
+				                  if( !runningProcsList.containsValue( info.pid ) ){
+				                  //if( !runningProcsList.containsKey( info.processName ) &&  !runningProcsList.containsValue( info.pid ) ){
+				                	  runningProcsList.put(info.processName, String.valueOf( info.pid ));
+				                	  
+				                	  
+				                	  // Add only one process at a time
+				                	  break;
+				                  }
+			                  }
+			                  //processName = c.toString();
+			                  //processName = info.processName;
+			              
+			          }
+			          catch(Exception e) 
+			          {
+			                //Log.d("Process", "Error>> :"+ e.toString());
+			          }
+			   }
+			    
+			    //l.clear();
+			    
+			    
+			    /// Run strace
+			    
+			    Iterator it = runningProcsList.entrySet().iterator();
+			    Process process = null;
+			    try {
+					process = Runtime.getRuntime().exec("su");
+				} catch (IOException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+			    
+			    while( it.hasNext() ){
+			    	Map.Entry hm = (Map.Entry) it.next();
+			    	Log.d("Process", "Id: "+ hm.getValue() +" ProcessName: "+ hm.getKey() );
+			    	
+				   
+					try {
+						if( !hm.getKey().toString().equals("com.android.alarmclock") && 
+								!hm.getKey().toString().equals("com.android.launcher") &&
+								!hm.getKey().toString().equals("com.android.settings") &&
+								!hm.getKey().toString().equals("jp.co.omronsoft.openwnn") && 
+								!hm.getKey().toString().equals("com.android.defcontainer")
+								){
+							
+							if( hm.getKey().toString().equals("com.android.browser") ){
+							//process = Runtime.getRuntime().exec("su");
+							//process = Runtime.getRuntime().exec("echo 0 > /proc/sys/kernel/yama/ptrace_scope");
+						
+				    		//Process process = Runtime.getRuntime().exec("su");
+				    		//OutputStream os;
+				    		//os = process.getOutputStream();
+							synchronized (process) {
+								
+							
+				    		DataOutputStream os = new DataOutputStream(process.getOutputStream());
+				    		//String com = "/system/xbin/strace -p 124 -o /sdcard/strace/stout.txt";
+				    		//String com = "/system/xbin/strace -p "+hm.getValue()+" -o /sdcard/strace/"+hm.getKey()+".txt -e trace=open,close uname";
+				    		//String com = "/system/xbin/strace -p "+hm.getValue()+" -s 200 -o /sdcard/strace/"+hm.getKey()+".txt";
+				    		String com = "/system/xbin/strace -p "+hm.getValue()+" -s 200 -o /sdcard/strace/"+hm.getKey()+".txt";
+				    		//String com = "/sdcard/strace/strace -p "+hm.getValue()+" -o /sdcard/strace/"+hm.getKey()+".txt -e trace=open,close uname";
+				    		//String com = "/system/xbin/strace -p 124";
+				    		Log.d("XX##XX", com);
+				    		os.writeBytes( com );
+				    		os.flush();
+				    		os.close();
+				    		
+				    		
+				    		//process.wait(5000);
+				    		//process.destroy();
+				    		//process.exitValue()
+				    		process.waitFor();
+							}
+							}
+						}
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block 
+						//e1.printStackTrace();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						//e.printStackTrace();
+					}
+					
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						//e.printStackTrace();
+					}
+					
+			    }
+			}
+			
+			return null;
+		}
+	}
+	
+	private String getAppName(int pID)
+	{
+	    String processName = "";
+	    ActivityManager am = (ActivityManager)this.getSystemService(ACTIVITY_SERVICE);
+	    List l = am.getRunningAppProcesses();
+	    Iterator i = l.iterator();
+	    PackageManager pm = this.getPackageManager();
+	    while(i.hasNext()) 
+	    {
+	          ActivityManager.RunningAppProcessInfo info = (ActivityManager.RunningAppProcessInfo)(i.next());
+	          try 
+	          { 
+	              if(info.pid == pID)
+	              {
+	                  CharSequence c = pm.getApplicationLabel(pm.getApplicationInfo(info.processName, PackageManager.GET_META_DATA));
+	                  Log.d("Process", "Id: "+ info.pid +" ProcessName: "+ info.processName +"  Label: "+c.toString());
+	                  //processName = c.toString();
+	                  //processName = info.processName;
+	              }
+	          }
+	          catch(Exception e) 
+	          {
+	                //Log.d("Process", "Error>> :"+ e.toString());
+	          }
+	   }
+	    return processName;
+	}
+
 
 	
 	@Override
 	public void onCreate(){
 		super.onCreate();
 		data = new ServiceDataSource( this );
+		runningProcsList = new HashMap<String, String>();
 		
 		notificationCounter = 0;
 		
@@ -122,6 +290,11 @@ public class ServiceDemo extends Service {
 		mgr.requestLocationUpdates(provider, LocationTick, 0, locationListener);
 		
 		Log.d("onStartCommand()", "Service Started");
+		
+		isRunning = true;
+		
+		//new AppLaunchWatcher().execute(null);
+		new AppLaunchWatcher().execute( this );
 		
 		notifyTask = new TimerTask(){
 			int i = 0;
