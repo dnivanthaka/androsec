@@ -5,6 +5,7 @@ import android.app.Application;
 public class AppGlobal extends Application {
 	private boolean serviceRunning = false;
 	private static AppGlobal instance;
+	private String appToTrack = null;
 	
 	private AppGlobal(){}
 	
@@ -22,5 +23,13 @@ public class AppGlobal extends Application {
 	
 	public void setServiceStatus( boolean s ){
 		this.serviceRunning = s;
+	}
+	
+	public void setAppToTrack(String s){
+		appToTrack = s;
+	}
+	
+	public String getAppToTrack(){
+		return appToTrack;
 	}
 }

@@ -6,8 +6,35 @@
     android:layout_gravity="top" >
 <LinearLayout
     android:layout_width="match_parent"
+    android:id="@+id/linearLayout1"
     android:layout_height="wrap_content"
     android:orientation="vertical" >
+    <Spinner
+    android:id="@+id/applist_spinner"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" />
 </LinearLayout>
+<LinearLayout
+    android:layout_width="match_parent"
+    android:id="@+id/linearLayout2"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+ <Button
+     android:id="@+id/btnRun"
+     android:layout_width="160dp"
+     android:layout_height="wrap_content"
+     android:layout_gravity="center_horizontal"
+     android:text="Start Monitoring" />
+
+</LinearLayout>
+
+<TextView
+    android:id="@+id/appsList"
+    android:maxLines = "25"
+    android:scrollbars = "vertical"
+    android:layout_width="match_parent"
+    android:layout_height="357dp"
+    android:text="" />
 
 </LinearLayout>

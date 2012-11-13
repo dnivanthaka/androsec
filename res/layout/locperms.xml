@@ -4,37 +4,116 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:layout_gravity="top" >
-<LinearLayout
-    android:layout_width="match_parent"
-    android:id="@+id/linearLayout1"
-    android:layout_height="wrap_content"
-    android:orientation="vertical" >
-    <Spinner
-    android:id="@+id/applist_spinner"
+    <!--
+<ScrollView
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content" />
-</LinearLayout>
-<LinearLayout
-    android:layout_width="match_parent"
-    android:id="@+id/linearLayout2"
     android:layout_height="wrap_content"
-    android:orientation="vertical" >
+    android:layout_marginBottom="60dip"> -->
 
- <Button
-     android:id="@+id/btnRun"
+<TableLayout
+        android:id="@+id/tablelayout"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:paddingRight="2dip" >
+<TableRow>
+
+    <TextView
+        android:id="@+id/permName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Name" />
+    <EditText
+                android:id="@+id/permNameTxt"
+                android:layout_weight="1" />
+    
+</TableRow>
+<TableRow>
+
+    <TextView
+        android:id="@+id/permLat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Latitude" />
+    <EditText
+                android:id="@+id/permLatTxt"
+                android:layout_weight="1" />
+    
+</TableRow>
+<TableRow>
+
+    <TextView
+        android:id="@+id/permLng"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Longitude" />
+    <EditText
+                android:id="@+id/permLngTxt"
+                android:layout_weight="1" />
+    
+</TableRow>
+<TableRow>
+
+    <TextView
+        android:id="@+id/txt_w"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="WiFi" />
+
+    <Spinner
+        android:id="@+id/wifi_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    
+</TableRow>
+<TableRow>
+
+    <TextView
+        android:id="@+id/txt_b"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Bluetooth" />
+
+    <Spinner
+        android:id="@+id/blut_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    
+</TableRow>
+<TableRow>
+
+    <TextView
+        android:id="@+id/txt_s"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Screen Timeout" />
+
+    <Spinner
+        android:id="@+id/scr_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    
+</TableRow>
+<TableRow>
+    <Button
+     android:id="@+id/btnAdd"
      android:layout_width="160dp"
      android:layout_height="wrap_content"
      android:layout_gravity="center_horizontal"
-     android:text="Start Monitoring" />
-
-</LinearLayout>
-
+     android:text="Save" />
+    <Button
+     android:id="@+id/btnDelete"
+     android:layout_width="160dp"
+     android:layout_height="wrap_content"
+     android:layout_gravity="center_horizontal"
+     android:text="Delete" />
+</TableRow>
+</TableLayout>
 <TextView
-    android:id="@+id/appsList"
-    android:maxLines = "25"
+    android:id="@+id/permsList"
+    android:maxLines = "10"
     android:scrollbars = "vertical"
     android:layout_width="match_parent"
     android:layout_height="357dp"
     android:text="" />
-
+<!-- </ScrollView> -->
 </LinearLayout>
