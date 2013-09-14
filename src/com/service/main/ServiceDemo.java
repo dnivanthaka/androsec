@@ -5,6 +5,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -13,6 +15,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.demo.main.R;
 import com.service.data.ServiceData;
@@ -35,6 +43,7 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Binder;
@@ -400,11 +409,16 @@ public class ServiceDemo extends Service {
 				    			String subTypeName = info.getSubtypeName();
 				    			String extraInfo   = info.getExtraInfo();
 				    			
+				    			String ssid =  getCurrentSsid(getApplicationContext());
+				    			
+				    			if(ssid.length() > 0)
+				    				typeName = typeName + "|" + ssid;
+				    			
 				    			Log.d("NETSTATE", "<"+typeName+">, <"+subTypeName+">, <"+extraInfo+">" );
 				    			
-				    			data.updateAppTraceStatus(app, "1", "<"+typeName+">, <"+subTypeName+">, <"+extraInfo+">");
+				    			data.updateAppTraceStatus(app, "1", "<"+typeName+">, <"+subTypeName+">, <"+extraInfo+">", app+".txt");
 				    		}else{
-				    			data.updateAppTraceStatus(app, "1", "No Network Connection");
+				    			data.updateAppTraceStatus(app, "1", "No Network Connection", app+".txt");
 				    		}
 							
 				    		DataOutputStream os = new DataOutputStream(process.getOutputStream());
@@ -414,6 +428,7 @@ public class ServiceDemo extends Service {
 				    		//String com = "/system/xbin/strace -p "+hm.getValue()+" -s 200 -o /sdcard/strace/"+hm.getKey()+".txt\n";
 				    		//String com = "/system/xbin/strace -p "+app_pid+" -s 200 -o /sdcard/strace/"+app+".txt\n";
 				    		String com = "/system/xbin/strace -p "+app_pid+" -s 200 -o /sdcard/strace/"+app+".txt\n";
+				    		
 				    		//String com = "/system/xbin/strace -p 564 -s 200 -o /sdcard/strace/com.android.browser.txt";
 				    		//String com = "/sdcard/strace/strace -p "+hm.getValue()+" -o /sdcard/strace/"+hm.getKey()+".txt -e trace=open,close uname";
 				    		//String com = "/system/xbin/strace -p 124";
@@ -448,6 +463,8 @@ public class ServiceDemo extends Service {
 				    		os.writeBytes("exit\n");
 							os.flush();
 				    		os.close();
+				    		
+				    		//AppGlobal.getinstance().setStracePID( getPidFromPs("strace") );
 				    		
 				    		//Log.d("XX##XXStrace", String.valueOf(getPidFromPs("strace")));
 				    		
@@ -494,6 +511,21 @@ public class ServiceDemo extends Service {
 		}
 	}
 	
+	
+	public static String getCurrentSsid(Context context) {
+	  	String ssid = null;
+	  	ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+	  	NetworkInfo networkInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+		  	if (networkInfo.isConnected()) {
+		    	final WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+		    	final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
+		    	if (connectionInfo != null && connectionInfo.getSSID().toString().length() > 0 ) {
+		    		ssid = connectionInfo.getSSID();
+		    	}
+		  	}
+  		return ssid;
+	}
+	
 	private String getAppName(int pID)
 	{
 	    String processName = "";
@@ -522,7 +554,6 @@ public class ServiceDemo extends Service {
 	    return processName;
 	}
 
-
 	
 	@Override
 	public void onCreate(){
@@ -542,7 +573,7 @@ public class ServiceDemo extends Service {
 		Log.d("onCreate()", "Service Created");
 		
 		data.open();
-		data.saveAppsList();
+		//data.saveAppsList();
 	}
 	
 	// This is the old onStart method that will be called on the pre-2.0
@@ -599,8 +630,10 @@ public class ServiceDemo extends Service {
 		//location.
 		Cursor cursor = null;
 		//startManagingCursor(cursor);
-		cursor = data.getLocationPermissions(location.getLatitude(), location.getLongitude());
+		//cursor = data.getLocationPermissions(location.getLatitude(), location.getLongitude());
+		cursor = data.getLocationPermissionRange(location.getLatitude(), location.getLongitude());
 		//toastMessage("Location XX "+ location.getLongitude());
+		//toastMessage("Location XX "+ (Double)location.getLatitude());
 		//cursor = data.getLocationPermissions(10.0, 20.0);
 		
 		if( cursor != null && cursor.getCount() > 0 ){
@@ -672,6 +705,7 @@ public class ServiceDemo extends Service {
 			cursor.close();
 		}else if(cursor != null && cursor.getCount() == 0){
 			cursor.close();
+			//cursor.moveToFirst();
 			
 			cursor = null;
 			
@@ -732,7 +766,6 @@ public class ServiceDemo extends Service {
 				cursor.close();
 			}
 		}
-		
 		//data.close();
 		
 	}
@@ -747,10 +780,20 @@ public class ServiceDemo extends Service {
 		criteria.setAccuracy( Criteria.ACCURACY_FINE );
 		String provider = mgr.getBestProvider(criteria, true);
 		
+		
 		Log.d("bestProvider", provider);
 		dumpLocation( mgr.getLastKnownLocation( provider ) );
 		
-		mgr.requestLocationUpdates(provider, LocationTick, 0, locationListener);
+		// Testing the GPS provider, for Mocking Locations
+		//mgr.addTestProvider(LocationManager.GPS_PROVIDER, false, false,false, false, true, true, true, 0, 5);
+		//mgr.setTestProviderStatus(LocationManager.GPS_PROVIDER, LocationProvider.AVAILABLE, null, System.currentTimeMillis());
+		//mgr.setTestProviderEnabled(LocationManager.GPS_PROVIDER, true);
+		
+		//mgr.requestLocationUpdates(provider, LocationTick, 0, locationListener);
+		mgr.requestLocationUpdates(LocationManager.GPS_PROVIDER, LocationTick, 0, locationListener);
+		
+		
+
 		
 		Log.d("onStartCommand()", "Service Started");
 		
@@ -790,6 +833,9 @@ public class ServiceDemo extends Service {
 		//else
 			//applySecurityRules(  lastKnownLocation );
 		
+		
+		
+		
 		notifyTask = new TimerTask(){
 			int i = 0;
 
@@ -810,7 +856,11 @@ public class ServiceDemo extends Service {
 			
 		};
 		
+		// MockLocation
+		//MockLocationTimerTask mk = new MockLocationTimerTask();
+		//Timer mkTimer = new Timer();
 		
+		//mkTimer.schedule(mk, 3000, 1500);
 		
 		//timer.schedule( notifyTask, 1000, 10000 );
 		
@@ -881,6 +931,7 @@ public class ServiceDemo extends Service {
         	//
         //}
         
+		AppGlobal.getinstance().setStracePID( getPidFromPs("strace") );
     }
 	
     // Checking for internet connection
@@ -1074,5 +1125,127 @@ public class ServiceDemo extends Service {
 	        super.onProgressUpdate(progress);
 	        //mProgressDialog.setProgress(progress[0]);
 	    }
+	}
+	
+	int i = 0;
+	
+	class MockLocationTimerTask extends TimerTask {
+		 
+		  public void run() {
+			  // ERROR
+			  Log.d("##MockLocationTimerTask##", "Running ...");
+			// Mock Location
+			  	
+				Location loc = new Location("gps"); 
+				/*
+				if( i == 0){
+					Log.d("##MockLocationTimerTask##", "Running ..." + i);
+					loc.setLatitude(13.32); // just mock values 
+					loc.setLongitude(13.32); 
+					i = 1;
+				}else{
+					loc.setLatitude(15); // just mock values 
+					loc.setLongitude(15);
+					i = 0;
+				}
+				*/
+				try{
+				String tmp = getMockLocation( "http://192.168.1.2/~dinusha/androsec/mock_location.php" );
+				String[] RowData = tmp.split(",");
+				loc.setLatitude(Double.parseDouble(RowData[0].trim())); // just mock values 
+				loc.setLongitude(Double.parseDouble(RowData[1].trim())); 
+				mgr.setTestProviderLocation("gps", loc);
+				Log.d("##MockLocationTimerTask##", "Lat "+loc.getLatitude());
+				Log.d("##MockLocationTimerTask##", "Lng "+loc.getLongitude());
+				}catch(Exception e){
+					Log.d("##MockLocationTimerTask##", "EX "+e.getMessage());
+				}
+			 // how update TextView in link below  
+	                 // http://android.okhelp.cz/timer-task-timertask-run-cancel-android-example/
+	 
+		    System.out.println("");
+		  }
+		}
+	
+	String getMockLocation( String path ) throws URISyntaxException, ClientProtocolException, IOException{
+		BufferedReader in = null;
+		 HttpClient client;
+		 HttpGet method;
+		 String url = path;
+		 //String url = path;
+		 String appName    = "";
+		 String pckName    = "";
+		 String appDetails = "";
+		 String appScore   = "";
+		 
+
+	    try {
+	    	method = new HttpGet(url);
+	        client = new DefaultHttpClient();
+	        HttpGet request = new HttpGet();
+	        request.setURI(new URI(url));
+	        HttpResponse response = client.execute(method);
+	        String line = "";
+	        
+	        /*
+	        in = new BufferedReader
+	        (new InputStreamReader(response.getEntity().getContent()));
+	        
+	        StringBuffer sb = new StringBuffer("");
+	        String line = "";
+	        String NL = System.getProperty("line.separator");
+	        while ((line = in.readLine()) != null) {
+	            sb.append(line + NL);
+	        }
+	        in.close();
+	        */
+	        //page = sb.toString();
+	        
+	        //System.out.println(page);
+	        
+	         BufferedReader reader = new BufferedReader(new InputStreamReader( response.getEntity().getContent() ));
+			    try {
+			        //String line;
+			        while ((line = reader.readLine()) != null) 
+			        {
+			             //String[] RowData = line.split(",");
+			             
+			             //appName    = RowData[0].trim();
+			             //pckName    = RowData[1].trim();
+			             //appDetails = RowData[2].trim();
+			             //appScore   = RowData[3].trim();
+			             //value = RowData[1];
+			            // do something with "data" and "value"
+			             
+			             //Log.d("## Scanning ##", appName + " - " + pckName + " - " + appScore );
+			             
+			             //data.updateMalwaresList(pkName, otherNames, threatLevel);
+			             //data.SaveAppReport(appName, pckName, appDetails, appScore);
+			        	return line;
+			        }
+			        
+			        // Scan the list for potential malwares
+			        //scanMalwareList();
+			    }
+			    catch (IOException ex) {
+			        // handle exception
+			    }
+			    finally {
+			        
+			    }
+
+	         
+	        } finally {
+	        	if (in != null) {
+	            try {
+	                in.close();
+	                } catch (IOException e) {
+	                e.printStackTrace();
+	            }
+	        }
+	    }
+	    
+	    return "";
+
 	}
 }

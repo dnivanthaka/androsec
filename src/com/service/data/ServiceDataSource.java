@@ -2,6 +2,8 @@ package com.service.data;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +12,9 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PermissionInfo;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
@@ -20,6 +24,11 @@ public class ServiceDataSource {
 	private SQLiteDatabase database;
 	private ServiceData dbHelper;
 	private Context context;
+	
+	int locationRangeMeters = 100;
+	int earthRadius         = 6371;
+	//double deltaDegrees     = ((locationRangeMeters/1000) / earthRadius) * (180 / 3.142);
+	double deltaDegrees     = 0.002;
 	
 	public ServiceDataSource( Context ctx ){
 		dbHelper = new ServiceData(ctx);
@@ -105,6 +114,41 @@ public class ServiceDataSource {
         }
 	}
 	
+	public void savePackagesList(){
+		final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+		mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+		PackageManager pm = context.getPackageManager();
+		final List<PackageInfo> pkgAppsList = pm.getInstalledPackages( PackageManager.GET_PERMISSIONS );
+		
+		for (PackageInfo packageInfo : pkgAppsList) {
+			ContentValues cv = new ContentValues();
+			/*
+            Log.d(TAG, "Installed package :" + packageInfo.packageName);
+            Log.d(TAG,
+                    "Launch Activity :"
+                            + pm.getLaunchIntentForPackage(packageInfo.packageName)); 
+            */
+			//packageInfo
+			//Log.d("Service **", "Installed package :" + packageInfo.packageName + packageInfo.processName);
+			//cv.put(ServiceData.TABLE_APPSLIST_APPNAME, packageInfo.loadLabel(pm).toString());
+			
+			PermissionInfo[] permsList = packageInfo.permissions;
+			for( PermissionInfo perm : permsList ){
+				
+			}
+			//cv.put(ServiceData.TABLE_APPSLIST_PCKNAME, packageInfo.packageName);
+			//database.insert(ServiceData.TABLE_APPSLIST, null, cv);
+			//database.replace(ServiceData.TABLE_APPSLIST, null, cv);
+			//packageInfo.
+        }
+	}
+	
+	public void clearAppsList(){
+		//database.rawQuery("DELETE FROM "+ServiceData.TABLE_APPSLIST, null);
+		database.delete(ServiceData.TABLE_APPSLIST, null, null);
+		Log.d("Service **", "CLEARING OUT :");
+	}
+	
 	public List<String> getSavedAppsList(){
 		List<String> lst = new ArrayList<String>();
 		//String select = "SELECT package_name FROM installed_apps";
@@ -121,7 +165,7 @@ public class ServiceDataSource {
 		
 		return lst;
 	}
-	
+	/*
 	public void updateMalwaresList( String pkName, String names, String threatLevel ){
 		ContentValues cv = new ContentValues();
 		
@@ -132,7 +176,8 @@ public class ServiceDataSource {
 		//database.insert(ServiceData.TABLE_APPSLIST, null, cv);
 		database.replace(ServiceData.TABLE_MALWARES_LIST, null, cv);
 	}
-	
+	*/
+	/*
 	public Cursor getMalwaresList(){
 		Cursor cursor = database.query(ServiceData.TABLE_MALWARES_LIST, new String[] {
 				ServiceData.TABLE_MALWARE_PACKAGE, ServiceData.TABLE_MALWARE_NAMES, ServiceData.TABLE_MALWARE_THREAT_LEVEL
@@ -141,13 +186,21 @@ public class ServiceDataSource {
 		
 		return cursor;
 	}
+	*/
 	
-	public void updateAppTraceStatus(String app, String st, String netp){
+	public void updateAppTraceStatus(String app, String st, String netp, String filename){
 		ContentValues cv = new ContentValues();
 		
 		cv.put(ServiceData.TABLE_APPSLIST_STRACED, st);
-		cv.put(ServiceData.TABLE_APPSLIST_TRACEDATE, "Date('now')");
+		
+		Date todaysDate = new java.util.Date();
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+		String formattedDate = formatter.format(todaysDate);
+		
+		cv.put(ServiceData.TABLE_APPSLIST_TRACEDATE, formattedDate);
+		//cv.put(ServiceData.TABLE_APPSLIST_TRACEDATE, "Date('now')");
 		cv.put(ServiceData.TABLE_APPSLIST_TRACENETW, netp);
+		cv.put(ServiceData.TABLE_APPSLIST_STRACE, filename);
 		
 		Log.d(ServiceDataSource.class.getName(), "APP = "+app+" ST = "+st);
 		
@@ -163,6 +216,39 @@ public class ServiceDataSource {
                 null, null, null, null, null);
 		
 		return cursor;
+	}
+	
+	public Cursor getSavedAppReportCursor(){
+		Cursor cursor = database.query(ServiceData.TABLE_APP_REPORT, new String[] {
+				ServiceData.TABLE_APP_REPORT_APPNAME, ServiceData.TABLE_APP_REPORT_PCKNAME, ServiceData.TABLE_APP_REPORT_SCORE}, 
+                null, null, null, null, null);
+		
+		return cursor;
+	}
+	
+	public Cursor getStracedAppsCursor(){
+		String where = ServiceData.TABLE_APPSLIST_STRACED+"=?";
+		String[] whereArgs = { "1" };
+		
+		Cursor cursor = database.query(ServiceData.TABLE_APPSLIST, new String[] {
+				ServiceData.TABLE_APPSLIST_APPNAME, ServiceData.TABLE_APPSLIST_PCKNAME, ServiceData.TABLE_APPSLIST_STRACE, 
+				ServiceData.TABLE_APPSLIST_STRACED, ServiceData.TABLE_APPSLIST_TRACEDATE, ServiceData.TABLE_APPSLIST_TRACENETW
+				}, 
+				where, whereArgs, null, null, null);
+		
+		return cursor;
+	}
+	
+	public void SaveAppReport( String appName, String appPck, String details, String score ){
+		ContentValues cv = new ContentValues();
+		cv.put(ServiceData.TABLE_APP_REPORT_APPNAME, appName);
+		cv.put(ServiceData.TABLE_APP_REPORT_PCKNAME, appPck);
+		cv.put(ServiceData.TABLE_APP_REPORT_DETAILS, details);
+		cv.put(ServiceData.TABLE_APP_REPORT_SCORE, score);
+		
+		Log.d("APPREPORT", "Package :" + appName);
+		
+		database.replace(ServiceData.TABLE_APP_REPORT, null, cv);
 	}
 	
 	public boolean checkMalwarePresent( String packageName ){
@@ -202,9 +288,30 @@ public class ServiceDataSource {
 					ServiceData.TABLE_LOCATION_PERMS_BLU,
 					ServiceData.TABLE_LOCATION_PERMS_SCR
 				}, 
-				ServiceData.TABLE_LOCATION_PERMS_LAT+" = "+lat.toString()+" AND "+ServiceData.TABLE_LOCATION_PERMS_LNG+" = "+lng.toString(), 
+				ServiceData.TABLE_LOCATION_PERMS_LAT+" = "+String.valueOf(lat)+" AND "+ServiceData.TABLE_LOCATION_PERMS_LNG+" = "+String.valueOf(lng), 
 				null, null, null, null );
+		
+				//Log.d("DELTA", "D :" + deltaDegrees);
 
+		return cursor;
+	}
+	
+	public Cursor getLocationPermissionRange(Double lat, Double lng){
+		Cursor cursor = database.query(ServiceData.TABLE_LOCATION_PERMS, 
+				new String[] {
+					ServiceData.TABLE_LOCATION_PERMS_NAME,
+					ServiceData.TABLE_LOCATION_PERMS_LAT, 
+					ServiceData.TABLE_LOCATION_PERMS_LNG,
+					ServiceData.TABLE_LOCATION_PERMS_WIFI,
+					ServiceData.TABLE_LOCATION_PERMS_BLU,
+					ServiceData.TABLE_LOCATION_PERMS_SCR
+				}, 
+				"("+ServiceData.TABLE_LOCATION_PERMS_LAT+" >= "+String.valueOf((lat - deltaDegrees))+" AND "+ServiceData.TABLE_LOCATION_PERMS_LAT+" <= "+String.valueOf((lat + deltaDegrees))+") " +
+						"AND ("+ServiceData.TABLE_LOCATION_PERMS_LNG+" >= "+String.valueOf((lng - deltaDegrees)) +" AND "+ServiceData.TABLE_LOCATION_PERMS_LNG+" <= "+String.valueOf((lng + deltaDegrees))+")", 
+				null, null, null, null );
+		
+				//Log.d("DELTA", "D :" + String.valueOf((lat - deltaDegrees)));
+				
 		return cursor;
 	}
 	

@@ -25,12 +25,21 @@ public class ServiceData extends SQLiteOpenHelper {
 	
 	public static final String TABLE_APPSLIST_STRACED     = "is_straced";
 	public static final String TABLE_APPSLIST_STRACE      = "strace_output";
+	public static final String TABLE_GLOBAL_SETTINGS       = "app_settings";
 	
+	/*
 	public static final String TABLE_MALWARES_LIST         = "malware_list";
 	public static final String TABLE_MALWARE_PACKAGE       = "package_name";
 	public static final String TABLE_MALWARE_NAMES         = "other_names";
 	public static final String TABLE_MALWARE_THREAT_LEVEL  = "threat_level";
 	public static final String TABLE_GLOBAL_SETTINGS       = "app_settings";
+	*/
+	public static final String TABLE_APP_REPORT            = "app_report";
+	public static final String TABLE_APP_REPORT_APPNAME    = "app_name";
+	public static final String TABLE_APP_REPORT_PCKNAME    = "package_name";
+	public static final String TABLE_APP_REPORT_DETAILS    = "details";
+	public static final String TABLE_APP_REPORT_SCORE      = "behaviour_level";
+
 	
 	private static final String DATABASE_NAME = "mobsec.db";
 	private static final int DATABASE_VERSION = 2;
@@ -95,11 +104,17 @@ public class ServiceData extends SQLiteOpenHelper {
 	    		  +	"blu_s varchar(15)  NOT NULL,"
 	    		  +	"scr_s varchar(15)  NOT NULL"
 	    		  +	");");
-	      
+	      /*
 	      db.execSQL("CREATE TABLE malware_list (" + _ID
 	              + " INTEGER PRIMARY KEY AUTOINCREMENT, package_name"
 	              + " TEXT, other_names TEXT NOT NULL, details"
 	              + " TEXT, threat_level varchar(25), "+
+	                " UNIQUE(package_name));");
+	      */
+	      db.execSQL("CREATE TABLE app_report (" + _ID
+	              + " INTEGER PRIMARY KEY AUTOINCREMENT, app_name TEXT, "
+	              + " package_name TEXT, details"
+	              + " TEXT, behaviour_level varchar(25), "+
 	                " UNIQUE(package_name));");
 	      
 	      db.execSQL("CREATE TABLE app_settings (" + _ID
@@ -119,7 +134,8 @@ public class ServiceData extends SQLiteOpenHelper {
 			db.execSQL("DROP TABLE IF EXISTS location_details");
 			db.execSQL("DROP TABLE IF EXISTS installed_apps");
 			db.execSQL("DROP TABLE IF EXISTS location_permissions");
-			db.execSQL("DROP TABLE IF EXISTS malware_list");
+			//db.execSQL("DROP TABLE IF EXISTS malware_list");
+			db.execSQL("DROP TABLE IF EXISTS app_report");
 			db.execSQL("DROP TABLE IF EXISTS app_settings");
 	        onCreate(db);
 		

@@ -24,7 +24,9 @@
     android:id="@+id/textView1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:text="Background Service" />
+    android:textColor="#FFFF00"
+    android:textStyle="italic"
+    android:text="Background Service ------" />
 <LinearLayout
     android:layout_width="match_parent"
     android:id="@+id/linearLayout1"
@@ -32,7 +34,7 @@
     android:orientation="vertical" >
     <Button
         android:id="@+id/btnGlobalSettings"
-        android:layout_width="118dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:text="Global Settings" />
@@ -42,7 +44,9 @@
     android:id="@+id/textView1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:text="App Tracing" />
+    android:textColor="#FFFF00"
+    android:textStyle="italic"
+    android:text="App Tracing ------" />
 
 <LinearLayout
     android:layout_width="match_parent"
@@ -62,7 +66,9 @@
     android:id="@+id/textView1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:text="Location Services" />
+    android:textColor="#FFFF00"
+    android:textStyle="italic"
+    android:text="Location Services ------" />
 
 <LinearLayout
     android:layout_width="match_parent"
@@ -77,6 +83,14 @@
      android:text="Settings" />
 
 </LinearLayout>
+<TextView
+    android:id="@+id/textView2"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="App Security ------"
+    android:textColor="#FFFF00"
+    android:textStyle="italic"
+    android:width="100dp" />
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -90,10 +104,25 @@
      android:text="SendFiles" />
 
 </LinearLayout>
+<!--
+
+-->
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <Button
+        android:id="@+id/btnAppReport"
+        android:layout_width="118dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="App Report" />
+   
+</LinearLayout>
 <TextView
     android:id="@+id/commandOut"
     android:layout_width="match_parent"
     android:layout_height="300dp"
     android:text="" />
-
 </LinearLayout>

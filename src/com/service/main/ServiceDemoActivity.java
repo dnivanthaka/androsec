@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -27,6 +28,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.demo.main.R;
+import com.service.data.ServiceData;
 import com.service.data.ServiceDataSource;
 
 import android.app.Activity;
@@ -66,6 +68,7 @@ public class ServiceDemoActivity extends Activity {
 	private Button runCommand;
 	private Button locPerms;
 	private Button sendFiles;
+	private Button appReport;
 	private Button globalConfig;
 	private Intent serviceIntent;
 	private ServiceDemo mService;
@@ -452,6 +455,29 @@ public class ServiceDemoActivity extends Activity {
         	
         }
         
+        // Monitoring Stopper ------------------------
+        
+        if( ServiceDemo.getPidFromPs("strace") > 0 ){
+        	
+        	 Button btnTraceStopper = new Button( this );
+        	 btnTraceStopper.setText("Stop App Tracing");
+             
+        	 btnTraceStopper.setOnClickListener( new View.OnClickListener() {
+     			
+     			@Override
+     			public void onClick(View v) {
+     				//ServiceDemo.killProcess( ServiceDemo.getPidFromPs("strace") );
+     				ServiceDemo.killProcess( ServiceDemo.getPidFromPs("strace") );
+     				setServiceControls();
+     			}
+     		} );
+        	 
+        	 l1.addView( btnTraceStopper );
+        	
+        }
+        
+        //--------------------------------------------
+        
         runCommand = (Button) findViewById( R.id.btnRun );
         runCommand.setOnClickListener( new View.OnClickListener() {
 			
@@ -486,6 +512,8 @@ public class ServiceDemoActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				
+				ServerURL      = data.getGlobalParam( "trace_upload_path" );
+				
 				//runCommand();
 				//readLog();
 				//runStrace();
@@ -509,6 +537,16 @@ public class ServiceDemoActivity extends Activity {
 				launchActivity( "global_settings" );
 			}
 		} );
+        
+        appReport = (Button) findViewById( R.id.btnAppReport );
+        appReport.setOnClickListener( new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				
+				launchActivity( "app_report" );
+			}
+		} );
     }
     
     private void launchActivity( String activity )
@@ -521,15 +559,27 @@ public class ServiceDemoActivity extends Activity {
     		i = new Intent( this, LocationServicesActivity.class );
     	}else if( activity.equals("global_settings") ){
     		i = new Intent( this, GlobalSettingsActivity.class );
+    	}else if( activity.equals("app_report") ){
+    		i = new Intent( this, AppReportActivity.class );
     	}
     	
     	startActivity(i);
     }
     
     private void sendFiles(){
-    	appWatchTask = (ServerTask) new ServerTask().execute(new String[]{});
+    	if( isNetworkAvailable() ){
+    		if( ServerURL.length() > 4 ){
+				toastMessage( "Uploading Files...." );
+				appWatchTask = (ServerTask) new ServerTask().execute(new String[]{});
+			}else{
+				toastMessage( "Please Enter a Valid Upload URL" );
+			}
+    		
+    	}else{
+    		toastMessage( "No Internet Connection Available" );
+    	}
     	
-    	scanMalwaresList();
+    	//scanMalwaresList();
     }
     
     private void sendNotification( Intent intent, long when, String message, int i ){
@@ -623,6 +673,8 @@ public class ServiceDemoActivity extends Activity {
     		mBound = false;
     	}
     	*/
+    	
+    	data.close();
         
     }
     
@@ -636,6 +688,8 @@ public class ServiceDemoActivity extends Activity {
             mBound = false;
         }
         */
+        
+        data.close();
     }
     
     public boolean isServiceRunning(String serviceClassName){
@@ -664,7 +718,7 @@ public class ServiceDemoActivity extends Activity {
         }
         return -1;
      }
-    
+    /*
     private void scanMalwaresList(){
 		String packageName = "";
 		String appName = "";
@@ -692,6 +746,7 @@ public class ServiceDemoActivity extends Activity {
 			cursor.close();
 		}
 	}
+	*/
     
     // Checking for internet connection
     private boolean isNetworkAvailable() {
@@ -705,7 +760,7 @@ public class ServiceDemoActivity extends Activity {
     public class ServerTask  extends AsyncTask<String, Integer , Void>
 	{
     	
-    	HttpURLConnection uploadFile( FileInputStream fileInputStream, String fileName ){
+    	HttpURLConnection uploadFile( FileInputStream fileInputStream, String fileName, HashMap<String, String> meta ){
     		//final String serverFileName = "test"+ (int) Math.round(Math.random()*1000) + ".jpg";
     		final String serverFileName = fileName;
     		final String lineEnd = "\r\n";
@@ -751,15 +806,22 @@ public class ServiceDemoActivity extends Activity {
 				dos.writeBytes(lineEnd);
 				dos.flush();
 				
+				dos.writeBytes( twoHyphens + boundary + lineEnd + "Content-Disposition: form-data; name=\"appname\""+ lineEnd + lineEnd + meta.get( ServiceData.TABLE_APPSLIST_APPNAME ) + lineEnd );
+				dos.writeBytes( twoHyphens + boundary + lineEnd + "Content-Disposition: form-data; name=\"pckname\""+ lineEnd + lineEnd + meta.get( ServiceData.TABLE_APPSLIST_PCKNAME ) + lineEnd );
+				dos.writeBytes( twoHyphens + boundary + lineEnd + "Content-Disposition: form-data; name=\"tracedate\""+ lineEnd + lineEnd + meta.get( ServiceData.TABLE_APPSLIST_TRACEDATE ) + lineEnd );
+				dos.writeBytes( twoHyphens + boundary + lineEnd + "Content-Disposition: form-data; name=\"networkinfo\""+ lineEnd + lineEnd + meta.get( ServiceData.TABLE_APPSLIST_TRACENETW ) + lineEnd );
+				dos.flush();
 				
 				// Send data
 				//dos.writeBytes(data);
 				//dos.flush();
 				//dos.writeBytes(lineEnd);
+				//String feed = new String("--" + boundary + "\r\n" + "Content-Disposition: form-data; name=\"feed\"\r\n\r\n" + topost + "\r\n");
 				dos.writeBytes(twoHyphens + boundary + lineEnd);
 				dos.writeBytes("Content-Disposition: form-data; name=\"uploadedfile\";filename=\"" + serverFileName +"\"" + lineEnd);
 				dos.writeBytes(lineEnd);
-				
+				dos.writeBytes(boundary);
+				dos.flush();
 				//dos.writeBytes("POST /~dinusha/androsec/save_trace_data.php HTTP/1.0\r\n");
 				//dos.writeBytes("GET /~dinusha/ HTTP/1.1\r\n");
 				//dos.writeBytes("Content-Length: "+data.length()+"\r\n");
@@ -812,7 +874,8 @@ public class ServiceDemoActivity extends Activity {
 			}
     	}
     	
-    	void saveMalwareList( String path ) throws URISyntaxException, ClientProtocolException, IOException{
+    	/*
+    	 void saveMalwareList( String path ) throws URISyntaxException, ClientProtocolException, IOException{
     		BufferedReader in = null;
     		 HttpClient client;
     		 HttpGet method;
@@ -827,7 +890,7 @@ public class ServiceDemoActivity extends Activity {
     	        HttpGet request = new HttpGet();
     	        request.setURI(new URI(url));
     	        HttpResponse response = client.execute(method);
-    	        /*
+    	        
     	        in = new BufferedReader
     	        (new InputStreamReader(response.getEntity().getContent()));
     	        StringBuffer sb = new StringBuffer("");
@@ -838,7 +901,7 @@ public class ServiceDemoActivity extends Activity {
     	        }
     	        in.close();
     	        page = sb.toString();
-    	        */
+    	        
     	        //System.out.println(page);
     	        
     	         BufferedReader reader = new BufferedReader(new InputStreamReader( response.getEntity().getContent() ));
@@ -880,12 +943,87 @@ public class ServiceDemoActivity extends Activity {
     	    
 
     	}
+*/
+    	
+    	void saveAppReport( String path ) throws URISyntaxException, ClientProtocolException, IOException{
+    		BufferedReader in = null;
+    		 HttpClient client;
+    		 HttpGet method;
+    		 String url= path;
+    		 String appName    = "";
+    		 String pckName    = "";
+    		 String appDetails = "";
+    		 String appScore   = "";
 
+    	    try {
+    	    	method = new HttpGet(url);
+    	        client = new DefaultHttpClient();
+    	        HttpGet request = new HttpGet();
+    	        request.setURI(new URI(url));
+    	        HttpResponse response = client.execute(method);
+    	        
+    	        in = new BufferedReader
+    	        (new InputStreamReader(response.getEntity().getContent()));
+    	        StringBuffer sb = new StringBuffer("");
+    	        String line = "";
+    	        String NL = System.getProperty("line.separator");
+    	        while ((line = in.readLine()) != null) {
+    	            sb.append(line + NL);
+    	        }
+    	        in.close();
+    	        //page = sb.toString();
+    	        
+    	        //System.out.println(page);
+    	        
+    	         BufferedReader reader = new BufferedReader(new InputStreamReader( response.getEntity().getContent() ));
+				    try {
+				        //String line;
+				        while ((line = reader.readLine()) != null) 
+				        {
+				             String[] RowData = line.split(",");
+				             
+				             appName    = RowData[0];
+				             pckName    = RowData[1];
+				             appDetails = RowData[2];
+				             appScore   = RowData[3];
+				             //value = RowData[1];
+				            // do something with "data" and "value"
+				             
+				             //Log.d("## Scanning ##", pkName + " - " + otherNames + " - " + threatLevel );
+				             
+				             //data.updateMalwaresList(pkName, otherNames, threatLevel);
+				             data.SaveAppReport(appName, pckName, appDetails, appScore);
+				        }
+				        
+				        // Scan the list for potential malwares
+				        //scanMalwareList();
+				    }
+				    catch (IOException ex) {
+				        // handle exception
+				    }
+				    finally {
+				        
+				    }
+
+    	         
+    	        } finally {
+    	        	if (in != null) {
+    	            try {
+    	                in.close();
+    	                } catch (IOException e) {
+    	                e.printStackTrace();
+    	            }
+    	        }
+    	    }
+    	    
+
+    	}
+    	
 		@Override
 		protected Void doInBackground(String... arg0) {
 			Log.e("ANDROSEC", "UPLOAD: ");
 			processFiles();
-			updateMalwareList();
+			//updateAppReport();
 			return null;
 		}
 		
@@ -893,6 +1031,60 @@ public class ServiceDemoActivity extends Activity {
 			//String inputFilePath = "/data/data/com.demo.main/databases/mobsec.db";
 			String inputFilePath = "/mnt/sdcard/strace/";
 			//String inputFilePath = "/mnt/sdcard/androsec/";
+			
+			
+			Cursor cursor = data.getStracedAppsCursor();
+			
+			cursor.moveToFirst();
+			while( cursor.isAfterLast() == false ){
+				if( cursor.getString(2).trim().length() > 0 ){
+					File tmp = new File( inputFilePath+cursor.getString(2) );
+					HashMap<String, String> meta = new HashMap<String, String>();
+					
+					if( tmp.isFile() ){
+						
+						meta.put( ServiceData.TABLE_APPSLIST_APPNAME , cursor.getString(0));
+						meta.put( ServiceData.TABLE_APPSLIST_PCKNAME , cursor.getString(1));
+						meta.put( ServiceData.TABLE_APPSLIST_TRACEDATE , cursor.getString(4));
+						meta.put( ServiceData.TABLE_APPSLIST_TRACENETW , cursor.getString(5));
+						
+						//Log.e("ANDROSEC", "UPLOAD: "+ cursor.getString(0) + meta.get( ServiceData.TABLE_APPSLIST_TRACENETW ) + cursor.getString(4) + cursor.getString(5) );
+						
+						try {
+
+							FileInputStream fileInputStream  = new FileInputStream(tmp);
+							Log.e("ANDROSEC", "UPLOAD: "+fileInputStream.available());
+							//upload photo
+					    	final HttpURLConnection  conn = uploadFile(fileInputStream, tmp.getName(), meta);
+					    	
+					    	//get processed photo from server
+					    	if (conn != null){
+					    	//getResultImage(conn);
+					    		//conn.disconnect();
+					    	}
+							fileInputStream.close();
+						}
+				        catch (FileNotFoundException ex){
+				        	Log.e("ANDROSEC", ex.toString());
+				        }
+				        catch (IOException ex){
+				        	Log.e("ANDROSEC", ex.toString());
+				        }
+						
+						tmp = null;
+						
+					}
+					//appReport.append( cursor.getString(0)+"("+cursor.getString(1)+") - "+cursor.getString(2)+"\n" );
+				
+				
+				}
+				
+				cursor.moveToNext();
+			}
+			
+			cursor.close();
+			
+			/*
 			File[] inputFiles = new File(inputFilePath).listFiles();
 			for( File file : inputFiles  ){
 				if( file.isFile() ){
@@ -918,9 +1110,29 @@ public class ServiceDemoActivity extends Activity {
 			        }
 				}
 			}
+			*/
 		}
 		
-		private void updateMalwareList(){
+		private void updateAppReport(){
+			try {
+			
+			//get malwares list
+		    saveAppReport( MalwareListURL );
+			//Log.e("ANDROSEC LIST -- ", output);	
+		    	
+			}
+	        catch (URISyntaxException ex){
+	        	Log.e("ANDROSEC", ex.toString());
+	        }
+			catch( ClientProtocolException ex ){
+				Log.e("ANDROSEC", ex.toString());
+			}
+	        catch (IOException ex){
+	        	Log.e("ANDROSEC", ex.toString());
+	        }
+		}
+		
+		/*private void updateMalwareList(){
 			try {
 			
 			//get malwares list
@@ -937,7 +1149,7 @@ public class ServiceDemoActivity extends Activity {
 	        catch (IOException ex){
 	        	Log.e("ANDROSEC", ex.toString());
 	        }
-		}
+		}*/
 		
 		
 	}

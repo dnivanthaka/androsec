@@ -52,6 +52,19 @@
     
 </TableRow>
 <TableRow>
+	<TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="" />
+   <Button
+     android:id="@+id/btnGetLocation"
+     android:layout_width="160dp"
+     android:layout_height="wrap_content"
+     android:layout_gravity="center_horizontal"
+     android:text="Get Co-ordinates" />
+    
+</TableRow>
+<TableRow>
 
     <TextView
         android:id="@+id/txt_w"
@@ -107,13 +120,23 @@
      android:layout_gravity="center_horizontal"
      android:text="Delete" />
 </TableRow>
+<TableRow>
+    <Button
+     android:id="@+id/btnLocationList"
+     android:layout_width="160dp"
+     android:layout_height="wrap_content"
+     android:layout_gravity="center_horizontal"
+     android:text="Permissions List" />
+</TableRow>
 </TableLayout>
+<!-- 
 <TextView
     android:id="@+id/permsList"
-    android:maxLines = "10"
+    android:maxLines = "20"
     android:scrollbars = "vertical"
     android:layout_width="match_parent"
     android:layout_height="357dp"
     android:text="" />
+-->
 <!-- </ScrollView> -->
 </LinearLayout>

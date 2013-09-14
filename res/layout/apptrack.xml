@@ -34,7 +34,9 @@
     android:maxLines = "25"
     android:scrollbars = "vertical"
     android:layout_width="match_parent"
-    android:layout_height="357dp"
+    android:textColor="#FF0000"
+    android:textStyle="italic"
+    android:layout_height="355dp"
     android:text="" />
 
 </LinearLayout>
