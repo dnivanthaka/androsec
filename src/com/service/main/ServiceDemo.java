@@ -32,8 +32,11 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Criteria;
@@ -587,6 +590,27 @@ public class ServiceDemo extends Service {
 		Log.d("onStart()", "Service Started");
 	}
 	*/
+	BroadcastReceiver networkStateReceiver = new BroadcastReceiver() {
+
+	    @Override
+	    public void onReceive(Context context, Intent intent) {
+	        Log.w("Network Listener", "Network Type Changed");
+	        
+	        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+    		NetworkInfo info = cm.getActiveNetworkInfo();
+
+    		if( info != null && info.isConnected() ){
+    			String typeName    = info.getTypeName();
+    			
+    			if( typeName.equals("WIFI") ){
+    				
+    			}
+    		}
+	    }
+	};
+
+	IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);        
+	//registerReceiver(networkStateReceiver, filter);
 	
 	LocationListener locationListener = new LocationListener(){
 
@@ -766,6 +790,92 @@ public class ServiceDemo extends Service {
 				cursor.close();
 			}
 		}
+		//data.close();
+		
+	}
+	
+	public void applyWifiSecurityRules(String ssid){
+		//location.
+		Cursor cursor = null;
+		//startManagingCursor(cursor);
+		//cursor = data.getLocationPermissions(location.getLatitude(), location.getLongitude());
+		//cursor = data.getLocationPermissionRange(location.getLatitude(), location.getLongitude());
+		cursor = data.getLocationPermissions(ssid);
+		//toastMessage("Location XX "+ location.getLongitude());
+		//toastMessage("Location XX "+ (Double)location.getLatitude());
+		//cursor = data.getLocationPermissions(10.0, 20.0);
+		
+		if( cursor != null && cursor.getCount() > 0 ){
+			cursor.moveToFirst();
+			
+			/*
+			 * ServiceData.TABLE_LOCATION_PERMS_NAME,
+					ServiceData.TABLE_LOCATION_PERMS_LAT, 
+					ServiceData.TABLE_LOCATION_PERMS_LNG,
+					ServiceData.TABLE_LOCATION_PERMS_WIFI,
+					ServiceData.TABLE_LOCATION_PERMS_BLU,
+					ServiceData.TABLE_LOCATION_PERMS_SCR
+			 * */
+			
+			String loc_name = cursor.getString(0);
+			String wifi_s   = cursor.getString(3);
+			String blu_s    = cursor.getString(4);
+			String scr_s    = cursor.getString(5);
+			//cursor.getCount();
+			//Log.d("$$", "Location Rule Found "+cursor.getCount());
+			//toastMessage("Location Rule "+ cursor.getString(0) +" Applied");
+			//toastMessage("Location Rule "+ cursor.getColumnName(0) +" Applied");
+			
+			toastMessage("WIFI Rule '"+ cursor.getString(0) +"' Applied");
+			boolean status;
+			// Controlling WiFi -------------
+			/*
+			boolean status = (wifi_s.equals("1")) ? true : false;
+			WifiManager wifiManager = (WifiManager)this.getSystemService(Context.WIFI_SERVICE);
+			wifiManager.setWifiEnabled(status);
+			*/			
+			//-------------------------------
+			// Controlling WiFi -------------
+			status = (blu_s.equals("1")) ? true : false;
+			BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter(); 
+			if( mBluetoothAdapter != null ){
+				if( status ){
+					if(!mBluetoothAdapter.isEnabled())
+						mBluetoothAdapter.enable();
+				}else{
+					if(mBluetoothAdapter.isEnabled())
+						mBluetoothAdapter.disable();
+				}
+			}
+			//-------------------------------
+			// Changing Screen timeout ------
+			// In millis
+			//int timeout = Integer.parseInt( scr_s );
+			int timeout = 30;
+			
+			if( scr_s.equals("15 Seconds") ){
+				timeout = 15;
+			}else if( scr_s.equals("30 Seconds") ){ 
+				timeout = 30;
+			}else if( scr_s.equals("1 Minute") ){ 
+				timeout = 60;
+			}else if( scr_s.equals("2 Minutes") ){
+				timeout = 120;
+			}else if( scr_s.equals("10 Minutes") ){
+				timeout = 60 * 10;
+			}else if( scr_s.equals("30 Minutes") ){
+				timeout = 60 * 30;
+			}
+			
+			//int timeout = Integer.parseInt( "10" );
+			//timeout = 30 * 1000;
+			Log.d("Timeout %%", scr_s+" - "+timeout);
+			timeout = timeout * 1000;
+			Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_OFF_TIMEOUT, timeout);
+			//------------------------------
+			cursor.close();
+		}
+		
 		//data.close();
 		
 	}

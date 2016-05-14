@@ -88,6 +88,7 @@ public class ServiceDemoActivity extends Activity {
 	private String ServerURL      = "";
 	private String MalwareListURL = "";
 	private String phoneID        = "";
+	private String wifiOnly       = "";
 	//private String ServerURL = "http://192.168.1.4:80";
 
 	
@@ -132,6 +133,7 @@ public class ServiceDemoActivity extends Activity {
 		
 		ServerURL      = data.getGlobalParam( "trace_upload_path" );
 		MalwareListURL = data.getGlobalParam( "malware_list_path" );
+		wifiOnly       = data.getGlobalParam( "upload_only_wifi" );
 		
 		TelephonyManager tManager = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
 		phoneID = tManager.getDeviceId();
@@ -568,12 +570,17 @@ public class ServiceDemoActivity extends Activity {
     
     private void sendFiles(){
     	if( isNetworkAvailable() ){
-    		if( ServerURL.length() > 4 ){
-				toastMessage( "Uploading Files...." );
-				appWatchTask = (ServerTask) new ServerTask().execute(new String[]{});
-			}else{
-				toastMessage( "Please Enter a Valid Upload URL" );
-			}
+    		if( (wifiOnly.equals("Y") && networkType().toString().equals("WIFI")) || wifiOnly.equals("N") ){
+    			if( ServerURL.length() > 4 ){
+    				toastMessage( "Uploading Files...." );
+    				appWatchTask = (ServerTask) new ServerTask().execute(new String[]{});
+    			}else{
+    				toastMessage( "Please Enter a Valid Upload URL" );
+    			}
+    		}else{
+    			toastMessage( "This is not a Wifi Connection" );
+    		}
+    		
     		
     	}else{
     		toastMessage( "No Internet Connection Available" );
@@ -754,6 +761,32 @@ public class ServiceDemoActivity extends Activity {
               = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null;
+    }
+ // Checking for internet connection type (e.g. Wifi)
+    private String networkType() {
+        ConnectivityManager connectivityManager 
+              = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        
+        if( activeNetworkInfo != null && activeNetworkInfo.isConnected() ){
+			
+			String typeName    = activeNetworkInfo.getTypeName();
+			String subTypeName = activeNetworkInfo.getSubtypeName();
+			String extraInfo   = activeNetworkInfo.getExtraInfo();
+			
+			//String ssid =  getCurrentSsid(getApplicationContext());
+			
+			//if(ssid.length() > 0)
+				//typeName = typeName + "|" + ssid;
+			
+			//Log.d("NETSTATE", "<"+typeName+">, <"+subTypeName+">, <"+extraInfo+">" );
+			
+			//data.updateAppTraceStatus(app, "1", "<"+typeName+">, <"+subTypeName+">, <"+extraInfo+">", app+".txt");
+			return typeName;
+		}else{
+			//data.updateAppTraceStatus(app, "1", "No Network Connection", app+".txt");
+			return "-";
+		}
     }
 
 

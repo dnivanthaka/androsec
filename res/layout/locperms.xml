@@ -30,6 +30,20 @@
 <TableRow>
 
     <TextView
+        android:id="@+id/permName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Type" />
+
+    <Spinner
+        android:id="@+id/perm_type"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    
+</TableRow>
+<TableRow>
+
+    <TextView
         android:id="@+id/permLat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

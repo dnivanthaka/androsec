@@ -14,6 +14,8 @@ public class ServiceData extends SQLiteOpenHelper {
 	public static final String TABLE_APPSLIST_TRACENETW             = "traced_network";
 	public static final String TABLE_LOCATION_PERMS                 = "location_permissions";
 	public static final String TABLE_LOCATION_PERMS_NAME            = "loc_name";
+	public static final String TABLE_LOCATION_PERM_TYPE             = "perm_type";
+	public static final String TABLE_LOCATION_PERM_SSID             = "perm_ssid";
 	public static final String TABLE_LOCATION_PERMS_LAT             = "lat";
 	public static final String TABLE_LOCATION_PERMS_LNG             = "lng";
 	public static final String TABLE_LOCATION_PERMS_WIFI            = "wifi_s";
@@ -25,7 +27,7 @@ public class ServiceData extends SQLiteOpenHelper {
 	
 	public static final String TABLE_APPSLIST_STRACED     = "is_straced";
 	public static final String TABLE_APPSLIST_STRACE      = "strace_output";
-	public static final String TABLE_GLOBAL_SETTINGS       = "app_settings";
+	public static final String TABLE_GLOBAL_SETTINGS      = "app_settings";
 	
 	/*
 	public static final String TABLE_MALWARES_LIST         = "malware_list";
@@ -98,6 +100,8 @@ public class ServiceData extends SQLiteOpenHelper {
 	      db.execSQL("CREATE TABLE location_permissions ("+ _ID
 	    		  + " INTEGER PRIMARY KEY AUTOINCREMENT,"
 	    		  + "loc_name varchar(50) NOT NULL,"
+	    		  +	"perm_type varchar(15)  NOT NULL,"
+	    		  +	"perm_ssid varchar(25)  NULL,"
 	    		  +	"lat REAL  NOT NULL,"
 	    		  +	"lng REAL  NOT NULL,"
 	    		  +	"wifi_s varchar(15)  NOT NULL,"
@@ -124,6 +128,7 @@ public class ServiceData extends SQLiteOpenHelper {
 	      
 	      db.execSQL("INSERT INTO app_settings (setting_name, setting_value) VALUES ('trace_upload_path', '-')");
 	      db.execSQL("INSERT INTO app_settings (setting_name, setting_value) VALUES ('malware_list_path', '-')");
+	      db.execSQL("INSERT INTO app_settings (setting_name, setting_value) VALUES ('upload_only_wifi', 'Y')");
 		
 	}
 

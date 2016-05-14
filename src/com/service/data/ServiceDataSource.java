@@ -266,7 +266,9 @@ public class ServiceDataSource {
 	
 	public Cursor getSavedLocPermsListCursor(){
 		Cursor cursor = database.query(ServiceData.TABLE_LOCATION_PERMS, new String[] {
-				ServiceData.TABLE_LOCATION_PERMS_NAME, 
+				ServiceData.TABLE_LOCATION_PERMS_NAME,
+				ServiceData.TABLE_LOCATION_PERM_TYPE,
+				ServiceData.TABLE_LOCATION_PERM_SSID,
 				ServiceData.TABLE_LOCATION_PERMS_LAT,
 				ServiceData.TABLE_LOCATION_PERMS_LNG,
 				ServiceData.TABLE_LOCATION_PERMS_WIFI,
@@ -282,6 +284,8 @@ public class ServiceDataSource {
 		Cursor cursor = database.query(ServiceData.TABLE_LOCATION_PERMS, 
 				new String[] {
 					ServiceData.TABLE_LOCATION_PERMS_NAME,
+					ServiceData.TABLE_LOCATION_PERM_TYPE,
+					ServiceData.TABLE_LOCATION_PERM_SSID,
 					ServiceData.TABLE_LOCATION_PERMS_LAT, 
 					ServiceData.TABLE_LOCATION_PERMS_LNG,
 					ServiceData.TABLE_LOCATION_PERMS_WIFI,
@@ -296,10 +300,32 @@ public class ServiceDataSource {
 		return cursor;
 	}
 	
+	public Cursor getLocationPermissions(String ssid){
+		Cursor cursor = database.query(ServiceData.TABLE_LOCATION_PERMS, 
+				new String[] {
+					ServiceData.TABLE_LOCATION_PERMS_NAME,
+					ServiceData.TABLE_LOCATION_PERM_TYPE,
+					ServiceData.TABLE_LOCATION_PERM_SSID,
+					ServiceData.TABLE_LOCATION_PERMS_LAT, 
+					ServiceData.TABLE_LOCATION_PERMS_LNG,
+					ServiceData.TABLE_LOCATION_PERMS_WIFI,
+					ServiceData.TABLE_LOCATION_PERMS_BLU,
+					ServiceData.TABLE_LOCATION_PERMS_SCR
+				}, 
+				ServiceData.TABLE_LOCATION_PERM_SSID+" = '"+ssid+"'", 
+				null, null, null, null );
+		
+				//Log.d("DELTA", "D :" + deltaDegrees);
+
+		return cursor;
+	}
+	
 	public Cursor getLocationPermissionRange(Double lat, Double lng){
 		Cursor cursor = database.query(ServiceData.TABLE_LOCATION_PERMS, 
 				new String[] {
 					ServiceData.TABLE_LOCATION_PERMS_NAME,
+					ServiceData.TABLE_LOCATION_PERM_TYPE,
+					ServiceData.TABLE_LOCATION_PERM_SSID,
 					ServiceData.TABLE_LOCATION_PERMS_LAT, 
 					ServiceData.TABLE_LOCATION_PERMS_LNG,
 					ServiceData.TABLE_LOCATION_PERMS_WIFI,
@@ -319,6 +345,8 @@ public class ServiceDataSource {
 		Cursor cursor = database.query(ServiceData.TABLE_LOCATION_PERMS, 
 				new String[] {
 					ServiceData.TABLE_LOCATION_PERMS_NAME,
+					ServiceData.TABLE_LOCATION_PERM_TYPE,
+					ServiceData.TABLE_LOCATION_PERM_SSID,
 					ServiceData.TABLE_LOCATION_PERMS_LAT, 
 					ServiceData.TABLE_LOCATION_PERMS_LNG,
 					ServiceData.TABLE_LOCATION_PERMS_WIFI,
@@ -331,10 +359,12 @@ public class ServiceDataSource {
 		return cursor;
 	}
 	
-	public void saveLocationPermission( String name, Double lat, Double lng, String wifi, String blu, String scr ){
+	public void saveLocationPermission( String name, String type, String type_ssid, Double lat, Double lng, String wifi, String blu, String scr ){
 		ContentValues cv = new ContentValues();
 		
 		cv.put(ServiceData.TABLE_LOCATION_PERMS_NAME, name);
+		cv.put(ServiceData.TABLE_LOCATION_PERM_TYPE, type);
+		cv.put(ServiceData.TABLE_LOCATION_PERM_SSID, type_ssid);
 		cv.put(ServiceData.TABLE_LOCATION_PERMS_LAT, lat);
 		cv.put(ServiceData.TABLE_LOCATION_PERMS_LNG, lng);
 		cv.put(ServiceData.TABLE_LOCATION_PERMS_WIFI, wifi);
@@ -347,8 +377,8 @@ public class ServiceDataSource {
 				"VALUES (2, "+name+", "+lat+", "+lng+", "+wifi+", "+blu+", "+scr+")";
 				*/
 		
-		String sql = "INSERT INTO "+ServiceData.TABLE_LOCATION_PERMS+" (loc_name, lat, lng, wifi_s, blu_s, scr_s) " +
-				"VALUES ('"+name+"', '"+lat+"', '"+lng+"', '"+wifi+"', '"+blu+"', '"+scr+"')";
+		String sql = "INSERT INTO "+ServiceData.TABLE_LOCATION_PERMS+" (loc_name, perm_type, perm_ssid, lat, lng, wifi_s, blu_s, scr_s) " +
+				"VALUES ('"+name+"', '"+type+"', '"+type_ssid+"', '"+lat+"', '"+lng+"', '"+wifi+"', '"+blu+"', '"+scr+"')";
 		Log.d("########", "Query :" + sql);
 		//database.rawQuery(sql, null);
 		
@@ -387,6 +417,30 @@ public class ServiceDataSource {
 
 	}
 	
+	public boolean checkLocationPermission( String type, String ssid ){
+		Cursor mCursor =
+				database.query(true, ServiceData.TABLE_LOCATION_PERMS, new String[] {
+						ServiceData.TABLE_LOCATION_PERMS_NAME}, 
+						ServiceData.TABLE_LOCATION_PERM_TYPE + "='" + type + "' AND "+ServiceData.TABLE_LOCATION_PERM_SSID + "='"+ssid+"'", 
+                        null,
+                        null, 
+                        null, 
+                        null, 
+                        null);
+        if (mCursor != null) {
+            mCursor.moveToFirst();
+            if(mCursor.getCount() > 0){
+            	mCursor.close();
+            	return true;
+            }else{
+            	mCursor.close();
+            	return false;
+            }
+        }else{
+        	return false;
+        }
+
+	}
 	/*
 	public String getApptoTrack2(){
 		//return "com.android.browser";
